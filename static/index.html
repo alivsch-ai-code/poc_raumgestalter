@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Raumgestalter – Dein Bad in 3D mit echten Fliesen</title>
+<meta name="description" content="Plan oder Foto hochladen, Maße eintragen, Fliesen wählen: Der Raumgestalter baut dein Bad in 3D und rechnet die Fliesenmenge aus.">
+<meta name="theme-color" content="#f4f1ea">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230e7f86'/%3E%3Cpath d='M6 6h9v9H6zM17 6h9v9h-9zM6 17h9v9H6z' fill='%23fff' opacity='.92'/%3E%3Cpath d='M17 17h9v9h-9z' fill='%23e8a47f'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="/static/css/fonts.css">
+<link rel="stylesheet" href="/static/css/app.css">
+<script type="importmap">{"imports":{"three":"/static/vendor/three/build/three.module.js","three/addons/":"/static/vendor/three/examples/jsm/"}}</script>
+</head>
+<body data-step="1">
+<a class="skip" href="#main">Zum Inhalt springen</a>
+
+<header class="top" id="top">
+  <a class="brand" href="/" aria-label="Raumgestalter – Startseite" id="brand">
+    <svg viewBox="0 0 32 32" width="30" height="30" aria-hidden="true"><rect width="32" height="32" rx="8" fill="currentColor"/><path d="M6.5 6.5h8.5v8.5H6.5zM17 6.5h8.5V15H17zM6.5 17h8.5v8.5H6.5z" fill="#fff" opacity=".94"/><path d="M17 17h8.5v8.5H17z" fill="#f0b08a"/></svg>
+    <span class="brand-name">Raum<b>gestalter</b></span>
+  </a>
+  <nav class="stepper" id="stepper" aria-label="Fortschritt"></nav>
+  <div class="top-actions" id="topActions"></div>
+</header>
+
+<main id="main">
+  <!-- Schritt 1 -->
+  <section class="welcome" id="welcome" aria-labelledby="h-welcome"></section>
+
+  <!-- Schritte 2–4 -->
+  <section class="workspace" id="workspace" hidden>
+    <div class="viewport" id="viewport">
+      <div class="view-host" id="host3d"></div>
+      <div class="view-host" id="host2d" hidden></div>
+      <div class="viewbar" id="viewbar"></div>
+      <div class="vp-status" id="vpStatus" hidden><span class="spinner"></span><span>Fliesen werden verlegt …</span></div>
+      <div class="vp-pick" id="vpPick" hidden></div>
+    </div>
+    <aside class="panel" id="panel" aria-label="Einstellungen">
+      <div class="panel-scroll" id="panelScroll">
+        <div id="p-edit" class="pane" hidden></div>
+        <div id="p-design" class="pane" hidden></div>
+        <div id="p-result" class="pane" hidden></div>
+      </div>
+      <div class="panel-foot" id="panelFoot"></div>
+    </aside>
+  </section>
+</main>
+
+<div id="chatHost"></div>
+<div id="modalHost"></div>
+<div id="toasts" aria-live="polite"></div>
+<noscript><p style="padding:2rem">Der Raumgestalter braucht JavaScript.</p></noscript>
+<script type="module" src="/static/js/main.js"></script>
+</body>
+</html>

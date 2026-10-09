@@ -1,0 +1,123 @@
+// Schritt 4: Mengen, Kosten und Export.
+import { h, clear, toast, download, fmt0, fmt1, fmt2, fmtEur, fmtM2 } from './dom.js';
+import { icon } from './icons.js';
+import { S, on, exportProject } from './state.js';
+import { buildBom, patternOf, tileOf, groutOf, paintOf, trimOf } from './design.js';
+import { polyArea } from './room.js';
+import { renderSwatch } from './tilegen.js';
+
+export function initResult(root, { scene }) {
+  const holder = h('div');
+  root.append(holder);
+
+  function swatch(tile, px = 38) {
+    const c = document.createElement('canvas');
+    c.width = c.height = px;
+    setTimeout(() => { try { c.getContext('2d').drawImage(renderSwatch(tile, 112, '#cfcfcb', 3), 0, 0, px, px); } catch { /* egal */ } }, 0);
+    return c;
+  }
+
+  function render() {
+    if (!S.room || !S.design || !S.catalog) return;
+    clear(holder);
+    const cat = S.catalog;
+    const bom = buildBom(S.room, S.design, cat);
+    const floorArea = polyArea(S.room.polygon) / 10000;
+    const wallArea = bom.surfaces.filter((x) => x.id !== 'floor').reduce((a, x) => a + x.net, 0);
+    const extra = bom.grout.sacks * 12 + bom.adhesive.sacks * 14; // grobe Beispielpreise
+    const total = bom.tilesCost;
+
+    holder.append(h('h2', null, 'Deine Planung'),
+      h('p', { class: 'intro' }, 'Alle Mengen sind inklusive Verschnitt gerechnet. Preise sind Beispielwerte, kein Angebot.'));
+
+    holder.append(h('div', { class: 'sum' },
+      h('div', { class: 'kpi big' }, h('small', null, 'Fliesen (Beispielpreise)'), h('b', null, fmtEur(total))),
+      h('div', { class: 'kpi' }, h('small', null, 'Boden'), h('b', null, fmtM2(floorArea))),
+      h('div', { class: 'kpi' }, h('small', null, 'Wände gefliest (netto)'), h('b', null, fmtM2(wallArea)))));
+
+    // Fliesen
+    const rows = bom.lines.map((l) => h('tr', null,
+      h('td', null, h('div', { class: 'bom-tile' }, swatch(l.tile), h('div', null, h('b', null, l.tile.name), h('small', null, `${fmt0(l.tile.size[0])}×${fmt0(l.tile.size[1])} cm · ${l.surfaces.map((x) => x.name).join(', ')}`)))),
+      h('td', { class: 'r' }, fmt2(l.net)),
+      h('td', { class: 'r' }, `${l.boxes} Pk.`, h('br'), h('small', { style: { color: 'var(--muted)' } }, `${fmt2(l.m2Bought)} m²`)),
+      h('td', { class: 'r' }, fmtEur(l.cost))));
+    if (!rows.length) rows.push(h('tr', null, h('td', { colspan: 4, style: { color: 'var(--muted)' } }, 'Noch keine Fliesen gewählt.')));
+    holder.append(h('div', { class: 'sec' }, h('div', { class: 'sec-h' }, h('h3', null, 'Fliesen'), h('small', null, 'm² netto → Pakete')),
+      h('table', { class: 'bom' },
+        h('thead', null, h('tr', null, h('th', null, 'Fliese'), h('th', { class: 'r' }, 'm²'), h('th', { class: 'r' }, 'Kaufen'), h('th', { class: 'r' }, 'Preis'))),
+        h('tbody', null, ...rows),
+        h('tfoot', null, h('tr', null, h('td', { colspan: 3 }, 'Summe Fliesen'), h('td', { class: 'r' }, fmtEur(total)))))));
+
+    // Verlegung je Fläche
+    const srows = bom.surfaces.filter((x) => x.spec.tile && x.net > 0).map((x) => {
+      const t = tileOf(cat, x.spec.tile); const p = patternOf(cat, x.spec.pattern);
+      return h('tr', null,
+        h('td', null, x.name, h('br'), h('small', { style: { color: 'var(--muted)' } }, `${p.name} · Fuge ${fmt1(x.spec.groutMm)} mm ${groutOf(cat, x.spec.grout).name.toLowerCase()}`)),
+        h('td', { class: 'r' }, fmt2(x.net)),
+        h('td', { class: 'r' }, `${Math.round(p.waste * 100)} %`));
+    });
+    holder.append(h('div', { class: 'sec' }, h('div', { class: 'sec-h' }, h('h3', null, 'Flächen im Detail'), h('small', null, 'Türen und Fenster abgezogen')),
+      h('table', { class: 'bom' }, h('thead', null, h('tr', null, h('th', null, 'Fläche'), h('th', { class: 'r' }, 'm²'), h('th', { class: 'r' }, 'Verschnitt'))), h('tbody', null, ...srows))));
+
+    // Zubehör
+    const trim = trimOf(cat, S.design.trim);
+    const acc = [
+      ['Fugenmasse', `${fmt1(bom.grout.kg)} kg`, `${bom.grout.sacks} Sack à 5 kg`],
+      ['Fliesenkleber', `${fmt0(bom.adhesive.kg)} kg`, `${bom.adhesive.sacks} Sack à 25 kg`],
+    ];
+    if (bom.trim.meters > 0) acc.push([`Abschlussleiste (${trim.name})`, `${fmt1(bom.trim.meters)} m`, `${bom.trim.pieces} Stück à 2,5 m`]);
+    acc.push(['Wandfarbe', paintOf(cat, S.design.paint).name, 'für die Fläche über den Fliesen']);
+    holder.append(h('div', { class: 'sec' }, h('div', { class: 'sec-h' }, h('h3', null, 'Zubehör')),
+      h('table', { class: 'bom' }, h('tbody', null, ...acc.map(([a, b, c]) => h('tr', null, h('td', null, a), h('td', { class: 'r' }, b), h('td', { class: 'r', style: { color: 'var(--muted)' } }, c)))))));
+
+    // Export
+    holder.append(h('div', { class: 'sec no-print' }, h('div', { class: 'sec-h' }, h('h3', null, 'Mitnehmen')),
+      h('div', { class: 'exports' },
+        h('button', { class: 'btn', type: 'button', onclick: () => exportPng(bom) }, icon('download'), 'Bild (PNG)'),
+        h('button', { class: 'btn', type: 'button', onclick: () => exportCsv(bom) }, icon('download'), 'Einkaufsliste'),
+        h('button', { class: 'btn', type: 'button', onclick: () => { window.print(); } }, icon('print'), 'Drucken / PDF'),
+        h('button', { class: 'btn', type: 'button', onclick: () => { download('raumgestalter-projekt.json', new Blob([exportProject()], { type: 'application/json' })); toast('Projekt gespeichert. Mit „Projekt öffnen“ lädst du es wieder.', 'ok'); } }, icon('save'), 'Projekt sichern')),
+      h('p', { class: 'disclaimer' }, 'Hinweis: Menge = Fläche netto + Verschnitt je Muster, aufgerundet auf ganze Pakete. Fugen- und Klebermengen sind Richtwerte nach Herstellerformeln. Vor dem Kauf vom Fachbetrieb prüfen lassen. Preise und Fliesen im Katalog sind Beispieldaten.')));
+  }
+
+  async function exportPng(bom) {
+    toast('Bild wird erzeugt …', 'info', 1800);
+    await new Promise((r) => setTimeout(r, 60));
+    try {
+      const url = scene.capture(2200);
+      const img = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = url; });
+      const strip = 190;
+      const c = document.createElement('canvas');
+      c.width = img.width; c.height = img.height + strip;
+      const g = c.getContext('2d');
+      g.fillStyle = '#e9eeec'; g.fillRect(0, 0, c.width, c.height);
+      g.drawImage(img, 0, 0);
+      g.fillStyle = '#ffffff'; g.fillRect(0, img.height, c.width, strip);
+      g.fillStyle = '#1f2d31'; g.font = '700 44px "Bricolage Grotesque", system-ui, sans-serif';
+      g.fillText('Raumgestalter', 56, img.height + 76);
+      g.font = '500 30px "Instrument Sans", system-ui, sans-serif'; g.fillStyle = '#4a5c61';
+      const f = tileOf(S.catalog, S.design.floor.tile), w = tileOf(S.catalog, S.design.walls[0]?.tile);
+      g.fillText(`Boden: ${f?.name || '–'} ${f ? `${fmt0(f.size[0])}×${fmt0(f.size[1])}` : ''}   ·   Wände: ${w?.name || '–'} ${w ? `${fmt0(w.size[0])}×${fmt0(w.size[1])}` : ''}`, 56, img.height + 124);
+      g.fillText(`${fmtM2(polyArea(S.room.polygon) / 10000)} Boden   ·   Fliesen ca. ${fmtEur(bom.tilesCost)} (Beispielpreise)`, 56, img.height + 166);
+      c.toBlob((b) => { download('raumgestalter-ansicht.png', b); toast('Bild gespeichert.', 'ok'); }, 'image/png');
+    } catch (e) { console.error(e); toast('Das Bild konnte nicht erzeugt werden.', 'error'); }
+  }
+
+  function exportCsv(bom) {
+    const q = (v) => `"${String(v).replace(/"/g, '""')}"`;
+    const n = (v, d = 2) => v.toFixed(d).replace('.', ',');
+    const rows = [['Position', 'Artikel', 'Format cm', 'Fläche netto m²', 'Pakete', 'Fläche gekauft m²', 'Preis EUR (Beispiel)']];
+    bom.lines.forEach((l) => rows.push(['Fliese', l.tile.name, `${l.tile.size[0]}x${l.tile.size[1]}`, n(l.net), l.boxes, n(l.m2Bought), n(l.cost)]));
+    rows.push(['Zubehör', 'Fugenmasse', '', '', `${bom.grout.sacks} Sack à 5 kg`, '', '']);
+    rows.push(['Zubehör', 'Fliesenkleber', '', '', `${bom.adhesive.sacks} Sack à 25 kg`, '', '']);
+    if (bom.trim.meters > 0) rows.push(['Zubehör', 'Abschlussleiste', '', '', `${bom.trim.pieces} Stück à 2,5 m`, '', '']);
+    const csv = '﻿' + rows.map((r) => r.map(q).join(';')).join('\r\n');
+    download('raumgestalter-einkaufsliste.csv', new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+    toast('Einkaufsliste gespeichert (öffnet in Excel).', 'ok');
+  }
+
+  on('design', () => { if (S.step === 4) render(); });
+  on('room', (e) => { if (S.step === 4 && !e?.live) render(); });
+  on('step', (st) => { if (st === 4) render(); });
+  return { render };
+}

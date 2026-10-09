@@ -1,0 +1,1032 @@
+{
+ "_hinweis": "Beispieldaten für den Prototyp. Preise, Formate und Farben sind frei erfunden und lassen sich durch echte Herstellerdaten ersetzen.",
+ "tiles": [
+  {
+   "id": "uni-weiss-glanz-30x60",
+   "name": "Weiß glänzend",
+   "series": "Linea",
+   "look": "uni",
+   "colorName": "weiß",
+   "color": "#F2F2EE",
+   "color2": null,
+   "finish": "glanz",
+   "size": [
+    30,
+    60
+   ],
+   "thickness": 8,
+   "pcsPerBox": 6,
+   "boxM2": 1.08,
+   "priceM2": 24.9,
+   "use": "wand",
+   "rectified": true
+  },
+  {
+   "id": "uni-weiss-matt-60x60",
+   "name": "Weiß matt",
+   "series": "Linea",
+   "look": "uni",
+   "colorName": "weiß",
+   "color": "#ECEBE6",
+   "color2": null,
+   "finish": "matt",
+   "size": [
+    60,
+    60
+   ],
+   "thickness": 9,
+   "pcsPerBox": 4,
+   "boxM2": 1.44,
+   "priceM2": 29.9,
+   "use": "beide",
+   "rectified": true
+  },
+  {
+   "id": "uni-metro-weiss-10x20",
+   "name": "Metro Weiß",
+   "series": "Metro",
+   "look": "uni",
+   "colorName": "weiß",
+   "color": "#F4F4F0",
+   "color2": null,
+   "finish": "glanz",
+   "size": [
+    10,
+    20
+   ],
+   "thickness": 7,
+   "pcsPerBox": 50,
+   "boxM2": 1.0,
+   "priceM2": 32.5,
+   "use": "wand",
+   "rectified": true
+  },
+  {
+   "id": "uni-metro-taube-10x20",
+   "name": "Metro Taubenblau",
+   "series": "Metro",
+   "look": "uni",
+   "colorName": "blau",
+   "color": "#8FA6B5",
+   "color2": null,
+   "finish": "glanz",
+   "size": [
+    10,
+    20
+   ],
+   "thickness": 7,
+   "pcsPerBox": 50,
+   "boxM2": 1.0,
+   "priceM2": 36.9,
+   "use": "wand",
+   "rectified": true
+  },
+  {
+   "id": "uni-metro-rose-10x20",
+   "name": "Metro Altrosa",
+   "series": "Metro",
+   "look": "uni",
+   "colorName": "rosa",
+   "color": "#D9A9A0",
+   "color2": null,
+   "finish": "glanz",
+   "size": [
+    10,
+    20
+   ],
+   "thickness": 7,
+   "pcsPerBox": 50,
+   "boxM2": 1.0,
+   "priceM2": 36.9,
+   "use": "wand",
+   "rectified": true
+  },
+  {
+   "id": "uni-salbei-7x30",
+   "name": "Salbei glänzend",
+   "series": "Metro",
+   "look": "uni",
+   "colorName": "grün",
+   "color": "#9DB09B",
+   "color2": null,
+   "finish": "glanz",
+   "size": [
+    7.5,
+    30
+   ],
+   "thickness": 8,
+   "pcsPerBox": 44,
+   "boxM2": 0.99,
+   "priceM2": 41.9,
+   "use": "wand",
+   "rectified": true
+  },
+  {
+   "id": "uni-grau-hell-60x60",
+   "name": "Hellgrau matt",
+   "series": "Linea",
+   "look": "uni",
+   "colorName": "grau",
+   "color": "#B9BBBA",
+   "color2": null,
+   "finish": "matt",
+   "size": [
+    60,
+    60
+   ],
+   "thickness": 9,
+   "pcsPerBox": 4,
+   "boxM2": 1.44,
+   "priceM2": 29.9,
+   "use": "beide",
+   "rectified": true
+  },
+  {
+   "id": "uni-grau-60x120",
+   "name": "Grau mittel",
+   "series": "Linea",
+   "look": "uni",
+   "colorName": "grau",
+   "color": "#8E9092",
+   "color2": null,
+   "finish": "matt",
+   "size": [
+    60,
+    120
+   ],
+   "thickness": 10,
+   "pcsPerBox": 2,
+   "boxM2": 1.44,
+   "priceM2": 44.9,
+   "use": "beide",
+   "rectified": true
+  },
+  {
+   "id": "uni-anthrazit-60x60",
+   "name": "Anthrazit matt",
+   "series": "Linea",
+   "look": "uni",
+   "colorName": "anthrazit",
+   "color": "#3A3D40",
+   "color2": null,
+   "finish": "matt",
+   "size": [
+    60,
+    60
+   ],
+   "thickness": 9,
+   "pcsPerBox": 4,
+   "boxM2": 1.44,
+   "priceM2": 34.9,
+   "use": "beide",
+   "rectified": true
+  },
+  {
+   "id": "uni-schwarz-30x60",
+   "name": "Schwarz matt",
+   "series": "Linea",
+   "look": "uni",
+   "colorName": "schwarz",
+   "color": "#1E2022",
+   "color2": null,
+   "finish": "matt",
+   "size": [
+    30,
+    60
+   ],
+   "thickness": 9,
+   "pcsPerBox": 6,
+   "boxM2": 1.08,
+   "priceM2": 39.9,
+   "use": "beide",
+   "rectified": true
+  },
+  {
+   "id": "uni-beige-60x60",
+   "name": "Sand matt",
+   "series": "Linea",
+   "look": "uni",
+   "colorName": "beige",
+   "color": "#D8CDB8",
+   "color2": null,
+   "finish": "matt",
+   "size": [
+    60,
+    60
+   ],
+   "thickness": 9,
+   "pcsPerBox": 4,
+   "boxM2": 1.44,
+   "priceM2": 29.9,
+   "use": "beide",
+   "rectified": true
+  },
+  {
+   "id": "uni-greige-30x60",
+   "name": "Greige seidenmatt",
+   "series": "Linea",
+   "look": "uni",
+   "colorName": "greige",
+   "color": "#BDB3A5",
+   "color2": null,
+   "finish": "seidenmatt",
+   "size": [
+    30,
+    60
+   ],
+   "thickness": 8,
+   "pcsPerBox": 6,
+   "boxM2": 1.08,
+   "priceM2": 31.5,
+   "use": "wand",
+   "rectified": true
+  },
+  {
+   "id": "uni-petrol-30x60",
+   "name": "Petrol glänzend",
+   "series": "Linea",
+   "look": "uni",
+   "colorName": "blau",
+   "color": "#2F5F66",
+   "color2": null,
+   "finish": "glanz",
+   "size": [
+    30,
+    60
+   ],
+   "thickness": 8,
+   "pcsPerBox": 6,
+   "boxM2": 1.08,
+   "priceM2": 44.9,
+   "use": "wand",
+   "rectified": true
+  },
+  {
+   "id": "uni-terra-20x20",
+   "name": "Terrakotta matt",
+   "series": "Cotto",
+   "look": "uni",
+   "colorName": "terrakotta",
+   "color": "#B8654A",
+   "color2": null,
+   "finish": "matt",
+   "size": [
+    20,
+    20
+   ],
+   "thickness": 9,
+   "pcsPerBox": 25,
+   "boxM2": 1.0,
+   "priceM2": 38.9,
+   "use": "beide",
+   "rectified": true
+  },
+  {
+   "id": "marmor-carrara-60x120",
+   "name": "Carrara Weiß",
+   "series": "Marmo",
+   "look": "marmor",
+   "colorName": "weiß",
+   "color": "#EEEDEA",
+   "color2": "#9A9CA0",
+   "finish": "glanz",
+   "size": [
+    60,
+    120
+   ],
+   "thickness": 10,
+   "pcsPerBox": 2,
+   "boxM2": 1.44,
+   "priceM2": 59.9,
+   "use": "beide",
+   "rectified": true
+  },
+  {
+   "id": "marmor-calacatta-60x120",
+   "name": "Calacatta Gold",
+   "series": "Marmo",
+   "look": "marmor",
+   "colorName": "beige",
+   "color": "#F1EEE8",
+   "color2": "#B99A5F",
+   "finish": "glanz",
+   "size": [
+    60,
+    120
+   ],
+   "thickness": 10,
+   "pcsPerBox": 2,
+   "boxM2": 1.44,
+   "priceM2": 74.9,
+   "use": "beide",
+   "rectified": true
+  },
+  {
+   "id": "marmor-marquina-60x120",
+   "name": "Nero Marquina",
+   "series": "Marmo",
+   "look": "marmor",
+   "colorName": "schwarz",
+   "color": "#1B1B1D",
+   "color2": "#D8D8D8",
+   "finish": "glanz",
+   "size": [
+    60,
+    120
+   ],
+   "thickness": 10,
+   "pcsPerBox": 2,
+   "boxM2": 1.44,
+   "priceM2": 69.9,
+   "use": "beide",
+   "rectified": true
+  },
+  {
+   "id": "marmor-verde-60x60",
+   "name": "Verde Alpi",
+   "series": "Marmo",
+   "look": "marmor",
+   "colorName": "grün",
+   "color": "#2E4A3C",
+   "color2": "#C5D0C8",
+   "finish": "glanz",
+   "size": [
+    60,
+    60
+   ],
+   "thickness": 10,
+   "pcsPerBox": 4,
+   "boxM2": 1.44,
+   "priceM2": 64.9,
+   "use": "beide",
+   "rectified": true
+  },
+  {
+   "id": "travertin-creme-60x60",
+   "name": "Travertin Creme",
+   "series": "Marmo",
+   "look": "travertin",
+   "colorName": "beige",
+   "color": "#D9CBB2",
+   "color2": "#B7A585",
+   "finish": "matt",
+   "size": [
+    60,
+    60
+   ],
+   "thickness": 10,
+   "pcsPerBox": 4,
+   "boxM2": 1.44,
+   "priceM2": 49.9,
+   "use": "beide",
+   "rectified": true
+  },
+  {
+   "id": "beton-hell-60x60",
+   "name": "Beton hell",
+   "series": "Cemento",
+   "look": "beton",
+   "colorName": "grau",
+   "color": "#C4C4C0",
+   "color2": "#A9A9A5",
+   "finish": "matt",
+   "size": [
+    60,
+    60
+   ],
+   "thickness": 9,
+   "pcsPerBox": 4,
+   "boxM2": 1.44,
+   "priceM2": 27.9,
+   "use": "beide",
+   "rectified": true
+  },
+  {
+   "id": "beton-warm-60x60",
+   "name": "Beton warmgrau",
+   "series": "Cemento",
+   "look": "beton",
+   "colorName": "greige",
+   "color": "#B3AA9F",
+   "color2": "#988F84",
+   "finish": "matt",
+   "size": [
+    60,
+    60
+   ],
+   "thickness": 9,
+   "pcsPerBox": 4,
+   "boxM2": 1.44,
+   "priceM2": 29.9,
+   "use": "beide",
+   "rectified": true
+  },
+  {
+   "id": "beton-mittel-60x120",
+   "name": "Beton mittel",
+   "series": "Cemento",
+   "look": "beton",
+   "colorName": "grau",
+   "color": "#8D8E8C",
+   "color2": "#6F706E",
+   "finish": "matt",
+   "size": [
+    60,
+    120
+   ],
+   "thickness": 10,
+   "pcsPerBox": 2,
+   "boxM2": 1.44,
+   "priceM2": 42.9,
+   "use": "beide",
+   "rectified": true
+  },
+  {
+   "id": "beton-dunkel-80x80",
+   "name": "Beton dunkel",
+   "series": "Cemento",
+   "look": "beton",
+   "colorName": "anthrazit",
+   "color": "#4C4E50",
+   "color2": "#35373A",
+   "finish": "matt",
+   "size": [
+    80,
+    80
+   ],
+   "thickness": 10,
+   "pcsPerBox": 2,
+   "boxM2": 1.28,
+   "priceM2": 46.9,
+   "use": "beide",
+   "rectified": true
+  },
+  {
+   "id": "holz-eiche-20x120",
+   "name": "Eiche natur",
+   "series": "Legno",
+   "look": "holz",
+   "colorName": "braun",
+   "color": "#B88F5D",
+   "color2": "#8A6238",
+   "finish": "matt",
+   "size": [
+    20,
+    120
+   ],
+   "thickness": 9,
+   "pcsPerBox": 6,
+   "boxM2": 1.44,
+   "priceM2": 39.9,
+   "use": "boden",
+   "rectified": true
+  },
+  {
+   "id": "holz-nuss-20x120",
+   "name": "Nussbaum",
+   "series": "Legno",
+   "look": "holz",
+   "colorName": "braun",
+   "color": "#6E4A31",
+   "color2": "#4A2F1D",
+   "finish": "matt",
+   "size": [
+    20,
+    120
+   ],
+   "thickness": 9,
+   "pcsPerBox": 6,
+   "boxM2": 1.44,
+   "priceM2": 42.9,
+   "use": "boden",
+   "rectified": true
+  },
+  {
+   "id": "holz-eiche-grau-20x120",
+   "name": "Eiche grau",
+   "series": "Legno",
+   "look": "holz",
+   "colorName": "grau",
+   "color": "#9C968B",
+   "color2": "#756F64",
+   "finish": "matt",
+   "size": [
+    20,
+    120
+   ],
+   "thickness": 9,
+   "pcsPerBox": 6,
+   "boxM2": 1.44,
+   "priceM2": 39.9,
+   "use": "boden",
+   "rectified": true
+  },
+  {
+   "id": "holz-eiche-hell-15x90",
+   "name": "Eiche hell",
+   "series": "Legno",
+   "look": "holz",
+   "colorName": "beige",
+   "color": "#D4B88E",
+   "color2": "#B0905E",
+   "finish": "matt",
+   "size": [
+    15,
+    90
+   ],
+   "thickness": 9,
+   "pcsPerBox": 7,
+   "boxM2": 0.945,
+   "priceM2": 36.9,
+   "use": "boden",
+   "rectified": true
+  },
+  {
+   "id": "holz-parkett-10x60",
+   "name": "Eiche Parkett",
+   "series": "Legno",
+   "look": "holz",
+   "colorName": "braun",
+   "color": "#BE9660",
+   "color2": "#8F6A3A",
+   "finish": "matt",
+   "size": [
+    10,
+    60
+   ],
+   "thickness": 9,
+   "pcsPerBox": 16,
+   "boxM2": 0.96,
+   "priceM2": 44.9,
+   "use": "boden",
+   "rectified": true
+  },
+  {
+   "id": "terrazzo-hell-60x60",
+   "name": "Terrazzo hell",
+   "series": "Graniglia",
+   "look": "terrazzo",
+   "colorName": "beige",
+   "color": "#E3DDD2",
+   "color2": "#B9A68E|#8A8F94|#C9887A|#EDEAE4",
+   "finish": "matt",
+   "size": [
+    60,
+    60
+   ],
+   "thickness": 10,
+   "pcsPerBox": 4,
+   "boxM2": 1.44,
+   "priceM2": 54.9,
+   "use": "beide",
+   "rectified": true
+  },
+  {
+   "id": "terrazzo-dunkel-60x60",
+   "name": "Terrazzo dunkel",
+   "series": "Graniglia",
+   "look": "terrazzo",
+   "colorName": "anthrazit",
+   "color": "#4A4A4C",
+   "color2": "#D8D2C4|#A67C5B|#7D8C86|#B8B8B8",
+   "finish": "matt",
+   "size": [
+    60,
+    60
+   ],
+   "thickness": 10,
+   "pcsPerBox": 4,
+   "boxM2": 1.44,
+   "priceM2": 54.9,
+   "use": "beide",
+   "rectified": true
+  },
+  {
+   "id": "terrazzo-bunt-30x30",
+   "name": "Terrazzo bunt",
+   "series": "Graniglia",
+   "look": "terrazzo",
+   "colorName": "bunt",
+   "color": "#EFE9E0",
+   "color2": "#D56B4F|#4F7C8A|#E2B54D|#6E8B5F",
+   "finish": "matt",
+   "size": [
+    30,
+    30
+   ],
+   "thickness": 10,
+   "pcsPerBox": 11,
+   "boxM2": 0.99,
+   "priceM2": 58.9,
+   "use": "beide",
+   "rectified": true
+  },
+  {
+   "id": "zellige-weiss-10x10",
+   "name": "Zellige Weiß",
+   "series": "Zellige",
+   "look": "zellige",
+   "colorName": "weiß",
+   "color": "#EFEDE6",
+   "color2": null,
+   "finish": "glanz",
+   "size": [
+    10,
+    10
+   ],
+   "thickness": 10,
+   "pcsPerBox": 100,
+   "boxM2": 1.0,
+   "priceM2": 79.9,
+   "use": "wand",
+   "rectified": true
+  },
+  {
+   "id": "zellige-salbei-10x10",
+   "name": "Zellige Salbei",
+   "series": "Zellige",
+   "look": "zellige",
+   "colorName": "grün",
+   "color": "#8FA68A",
+   "color2": null,
+   "finish": "glanz",
+   "size": [
+    10,
+    10
+   ],
+   "thickness": 10,
+   "pcsPerBox": 100,
+   "boxM2": 1.0,
+   "priceM2": 79.9,
+   "use": "wand",
+   "rectified": true
+  },
+  {
+   "id": "zellige-petrol-10x10",
+   "name": "Zellige Petrol",
+   "series": "Zellige",
+   "look": "zellige",
+   "colorName": "blau",
+   "color": "#2E6A70",
+   "color2": null,
+   "finish": "glanz",
+   "size": [
+    10,
+    10
+   ],
+   "thickness": 10,
+   "pcsPerBox": 100,
+   "boxM2": 1.0,
+   "priceM2": 79.9,
+   "use": "wand",
+   "rectified": true
+  },
+  {
+   "id": "zellige-terra-10x10",
+   "name": "Zellige Terrakotta",
+   "series": "Zellige",
+   "look": "zellige",
+   "colorName": "terrakotta",
+   "color": "#B5603F",
+   "color2": null,
+   "finish": "glanz",
+   "size": [
+    10,
+    10
+   ],
+   "thickness": 10,
+   "pcsPerBox": 100,
+   "boxM2": 1.0,
+   "priceM2": 79.9,
+   "use": "wand",
+   "rectified": true
+  },
+  {
+   "id": "zellige-creme-13x13",
+   "name": "Zellige Creme",
+   "series": "Zellige",
+   "look": "zellige",
+   "colorName": "beige",
+   "color": "#E5D9BE",
+   "color2": null,
+   "finish": "glanz",
+   "size": [
+    13,
+    13
+   ],
+   "thickness": 10,
+   "pcsPerBox": 60,
+   "boxM2": 1.014,
+   "priceM2": 79.9,
+   "use": "wand",
+   "rectified": true
+  },
+  {
+   "id": "schiefer-anthrazit-30x60",
+   "name": "Schiefer anthrazit",
+   "series": "Ardesia",
+   "look": "schiefer",
+   "colorName": "anthrazit",
+   "color": "#3B3F42",
+   "color2": "#5A6064",
+   "finish": "matt",
+   "size": [
+    30,
+    60
+   ],
+   "thickness": 10,
+   "pcsPerBox": 6,
+   "boxM2": 1.08,
+   "priceM2": 49.9,
+   "use": "beide",
+   "rectified": true
+  }
+ ],
+ "patterns": [
+  {
+   "id": "grid",
+   "name": "Kreuzfuge",
+   "waste": 0.07,
+   "hint": "Klassisch, gerade Linien. Wenig Verschnitt."
+  },
+  {
+   "id": "half",
+   "name": "Halber Versatz",
+   "waste": 0.1,
+   "hint": "Jede Reihe um die Hälfte versetzt, wie ein Ziegelverband."
+  },
+  {
+   "id": "third",
+   "name": "Drittel-Versatz",
+   "waste": 0.1,
+   "hint": "Reihen um ein Drittel versetzt. Wirkt ruhiger bei langen Formaten."
+  },
+  {
+   "id": "diagonal",
+   "name": "Diagonal",
+   "waste": 0.14,
+   "hint": "Um 45° gedreht. Lässt kleine Räume größer wirken."
+  },
+  {
+   "id": "herring90",
+   "name": "Fischgrät 90°",
+   "waste": 0.15,
+   "hint": "Zickzack mit rechten Winkeln. Passt zu schmalen Formaten."
+  },
+  {
+   "id": "herring45",
+   "name": "Fischgrät 45°",
+   "waste": 0.18,
+   "hint": "Fischgrät diagonal gelegt. Aufwendig, sehr edel."
+  },
+  {
+   "id": "basket",
+   "name": "Korbgeflecht",
+   "waste": 0.1,
+   "hint": "Gruppen von Fliesen wechseln die Richtung."
+  }
+ ],
+ "paints": [
+  {
+   "id": "reinweiss",
+   "name": "Reinweiß",
+   "color": "#F3F1EC"
+  },
+  {
+   "id": "warmweiss",
+   "name": "Warmweiß",
+   "color": "#EDE6D8"
+  },
+  {
+   "id": "greige",
+   "name": "Greige",
+   "color": "#CFC6B8"
+  },
+  {
+   "id": "sand",
+   "name": "Sand",
+   "color": "#D9C9AE"
+  },
+  {
+   "id": "salbei",
+   "name": "Salbei hell",
+   "color": "#C5D0BE"
+  },
+  {
+   "id": "taube",
+   "name": "Taubenblau",
+   "color": "#C3CED4"
+  },
+  {
+   "id": "puder",
+   "name": "Puder",
+   "color": "#E6CFC7"
+  },
+  {
+   "id": "terra",
+   "name": "Terrakotta hell",
+   "color": "#D2A08A"
+  },
+  {
+   "id": "oliv",
+   "name": "Oliv",
+   "color": "#8B8F6A"
+  },
+  {
+   "id": "petrol",
+   "name": "Petrol",
+   "color": "#3E6A70"
+  },
+  {
+   "id": "anthrazit",
+   "name": "Anthrazit",
+   "color": "#44484B"
+  }
+ ],
+ "grouts": [
+  {
+   "id": "weiss",
+   "name": "Weiß",
+   "color": "#F1F0EC"
+  },
+  {
+   "id": "hellgrau",
+   "name": "Hellgrau",
+   "color": "#CFCFCB"
+  },
+  {
+   "id": "zement",
+   "name": "Zementgrau",
+   "color": "#A8A8A3"
+  },
+  {
+   "id": "anthrazit",
+   "name": "Anthrazit",
+   "color": "#55585A"
+  },
+  {
+   "id": "schwarz",
+   "name": "Schwarz",
+   "color": "#25272A"
+  },
+  {
+   "id": "beige",
+   "name": "Beige",
+   "color": "#C9BDA6"
+  },
+  {
+   "id": "braun",
+   "name": "Braun",
+   "color": "#7A6652"
+  }
+ ],
+ "trims": [
+  {
+   "id": "none",
+   "name": "Ohne",
+   "color": null
+  },
+  {
+   "id": "edelstahl",
+   "name": "Edelstahl",
+   "color": "#BFC3C6"
+  },
+  {
+   "id": "weiss",
+   "name": "Weiß",
+   "color": "#F4F4F2"
+  },
+  {
+   "id": "schwarz",
+   "name": "Schwarz",
+   "color": "#1E1F21"
+  },
+  {
+   "id": "messing",
+   "name": "Messing",
+   "color": "#B08A3E"
+  }
+ ],
+ "styles": [
+  {
+   "id": "hotel",
+   "name": "Hotelsuite",
+   "blurb": "Heller Marmor, raumhoch, ruhige Fugen.",
+   "paint": "reinweiss",
+   "trim": "none",
+   "floor": {
+    "tile": "marmor-carrara-60x120",
+    "pattern": "half",
+    "groutMm": 2,
+    "grout": "hellgrau"
+   },
+   "walls": {
+    "tile": "marmor-carrara-60x120",
+    "pattern": "grid",
+    "groutMm": 2,
+    "grout": "hellgrau",
+    "height": 250
+   }
+  },
+  {
+   "id": "skandi",
+   "name": "Skandi hell",
+   "blurb": "Eiche im Fischgrät, weiße Metro-Fliesen.",
+   "paint": "warmweiss",
+   "trim": "none",
+   "floor": {
+    "tile": "holz-parkett-10x60",
+    "pattern": "herring90",
+    "groutMm": 2,
+    "grout": "beige"
+   },
+   "walls": {
+    "tile": "uni-metro-weiss-10x20",
+    "pattern": "half",
+    "groutMm": 2,
+    "grout": "hellgrau",
+    "height": 210
+   }
+  },
+  {
+   "id": "industrial",
+   "name": "Industrial",
+   "blurb": "Beton, dunkle Fugen, anthrazit gestrichen.",
+   "paint": "anthrazit",
+   "trim": "schwarz",
+   "floor": {
+    "tile": "beton-mittel-60x120",
+    "pattern": "half",
+    "groutMm": 3,
+    "grout": "anthrazit"
+   },
+   "walls": {
+    "tile": "beton-hell-60x60",
+    "pattern": "grid",
+    "groutMm": 3,
+    "grout": "anthrazit",
+    "height": 120
+   }
+  },
+  {
+   "id": "mediterran",
+   "name": "Mediterran",
+   "blurb": "Terrakotta am Boden, Zellige in Creme.",
+   "paint": "sand",
+   "trim": "none",
+   "floor": {
+    "tile": "uni-terra-20x20",
+    "pattern": "grid",
+    "groutMm": 4,
+    "grout": "beige"
+   },
+   "walls": {
+    "tile": "zellige-creme-13x13",
+    "pattern": "grid",
+    "groutMm": 3,
+    "grout": "beige",
+    "height": 130
+   }
+  },
+  {
+   "id": "nero",
+   "name": "Nero & Messing",
+   "blurb": "Schwarzer Marmor, schwarze Wände, Messingleiste.",
+   "paint": "anthrazit",
+   "trim": "messing",
+   "floor": {
+    "tile": "marmor-marquina-60x120",
+    "pattern": "grid",
+    "groutMm": 2,
+    "grout": "schwarz"
+   },
+   "walls": {
+    "tile": "uni-schwarz-30x60",
+    "pattern": "half",
+    "groutMm": 2,
+    "grout": "schwarz",
+    "height": 210
+   }
+  },
+  {
+   "id": "salbei",
+   "name": "Salbei & Terrazzo",
+   "blurb": "Terrazzo am Boden, Salbeigrün an den Wänden.",
+   "paint": "salbei",
+   "trim": "weiss",
+   "floor": {
+    "tile": "terrazzo-hell-60x60",
+    "pattern": "grid",
+    "groutMm": 2,
+    "grout": "hellgrau"
+   },
+   "walls": {
+    "tile": "zellige-salbei-10x10",
+    "pattern": "grid",
+    "groutMm": 3,
+    "grout": "weiss",
+    "height": 120
+   }
+  }
+ ]
+}
