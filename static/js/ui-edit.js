@@ -121,7 +121,7 @@ export function initEdit(root) {
     const m = S.meta;
     if (m?.summary) {
       const conf = Math.round((m.confidence ?? 0) * 100);
-      box.append(h('div', { class: 'notice info' }, icon('wand'), h('div', null, h('b', null, 'So habe ich den Plan gelesen: '), m.summary,
+      box.append(h('div', { class: 'notice info' }, icon('wand'), h('div', null, h('b', null, m.kind === 'foto' ? 'Skizze aus deinem Foto: ' : 'So habe ich den Plan gelesen: '), m.summary,
         conf ? h('span', { style: { opacity: .75 } }, ` (Sicherheit ${conf} %)`) : null)));
     }
     (m?.warnings || []).forEach((w) => box.append(h('div', { class: 'notice warn' }, icon('alert'), w)));

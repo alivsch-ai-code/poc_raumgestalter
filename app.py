@@ -20,6 +20,7 @@ from collections import defaultdict, deque
 from pathlib import Path
 
 from flask import Flask, jsonify, request, send_from_directory
+import requests
 
 BASE = Path(__file__).parent
 
@@ -39,6 +40,8 @@ except Exception:  # pragma: no cover
 API_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 MODEL = os.getenv("CLAUDE_MODEL", "claude-sonnet-5-5").strip()
 CHAT_MODEL = os.getenv("CLAUDE_MODEL_CHAT", MODEL).strip()
+REPLICATE_TOKEN = os.getenv("REPLICATE_API_TOKEN", "").strip()
+REPLICATE_MODEL = os.getenv("REPLICATE_MODEL", "google/nano-banana").strip()
 HOST = os.getenv("HOST", "127.0.0.1")
 PORT = int(os.getenv("PORT", "5057"))
 
@@ -154,8 +157,10 @@ Regeln:
   `facing` = Richtung, in die die Vorderseite zeigt („oben“, „unten“, „links“, „rechts“; beim WC ist die Vorderseite
   die Seite, an der man sitzt/steht, nicht der Spülkasten). `w_u` = Ausdehnung quer zur Blickrichtung, `d_u` =
   Ausdehnung in Blickrichtung, beide in Bildeinheiten. Lässt sich ein Objekt nicht sicher bestimmen: weglassen.
-- Bei einem Foto des Raums: Schätze den Grundriss aus der Perspektive, so gut es geht, setze `confidence` niedrig
-  und erkläre in `warnings`, was unsicher ist.
+- Bei einem Foto des Raums rekonstruierst du selbst eine vereinfachte Draufsicht des Raums. Die Koordinaten
+    beschreiben diese erzeugte Draufsicht, nicht Pixelpositionen im Foto. Erkenne sichtbare Wände, Öffnungen und
+    Ausstattung; verdeckte Geometrie darfst du vorsichtig ergänzen. Setze `confidence` höchstens auf 0.65 und
+    erkläre in `warnings`, was unsicher ist. Die Draufsicht wird anschließend als editierbarer 2D-Grundriss gezeigt.
 - `summary`: 1–2 Sätze auf Deutsch, was du erkannt hast, in Alltagssprache.
 - `warnings`: Dinge, die der Nutzer prüfen sollte (unleserliche Maße, unklare Tür, verdeckte Bereiche).
 Wenn auf dem Bild kein Raum erkennbar ist, setze `plan_kind` = „unklar“ und liefere ein leeres Polygon."""
@@ -391,6 +396,8 @@ def api_analyze():
 
     dims = body.get("dims") or {}
     kind = body.get("kind") or "plan"
+    if kind == "foto":
+        dims = {key: value for key, value in dims.items() if key not in ("imgW", "imgH")}
     note = (body.get("notes") or "").strip()[:600]
     dim_txt = []
     if dims.get("length") and dims.get("width"):
@@ -398,7 +405,7 @@ def api_analyze():
     if dims.get("height"):
         dim_txt.append(f"Raumhöhe {dims['height']:.0f} cm.")
     user_text = (
-        ("Das Bild ist ein Foto des Raums. " if kind == "foto" else "Das Bild ist ein Plan oder eine Skizze. ")
+        ("Das Bild ist ein Foto des Raums. Rekonstruiere daraus eine vereinfachte Draufsicht mit geschätzten Wandverläufen. " if kind == "foto" else "Das Bild ist ein Plan oder eine Skizze. ")
         + " ".join(dim_txt)
         + (f"\nHinweis vom Nutzer: {note}" if note else "")
         + "\nBitte erkenne den Raum und rufe `submit_room` auf."
@@ -445,9 +452,9 @@ def api_analyze():
             "room": room,
             "meta": {
                 "summary": str(raw.get("summary") or "")[:400],
-                "confidence": max(0.0, min(1.0, _num(raw.get("confidence"), 0.5))),
-                "kind": raw.get("plan_kind"),
-                "warnings": [str(w)[:240] for w in warnings][:8],
+                "confidence": min(0.65, max(0.0, min(1.0, _num(raw.get("confidence"), 0.5)))) if kind == "foto" else max(0.0, min(1.0, _num(raw.get("confidence"), 0.5))),
+                "kind": "foto" if kind == "foto" else raw.get("plan_kind"),
+                "warnings": ((["Aus dem Raumfoto rekonstruierte Draufsicht: Maße und verdeckte Bereiche bitte im 2D-Editor prüfen."] if kind == "foto" else []) + [str(w)[:240] for w in warnings])[:8],
                 "model": MODEL,
             },
         }
@@ -782,6 +789,146 @@ def api_chat():
 
 
 # ======================================================================================
+# Realistische Ansichten aus dem fertigen Entwurf
+# ======================================================================================
+RENDER_VIEWS = (
+    ("Übersicht", "wide-angle view from just outside the doorway, showing the complete room layout"),
+    ("Waschtisch", "eye-level view from the doorway toward the vanity and the far wall"),
+    ("Dusche", "eye-level view from a room corner toward the shower and tiled walls"),
+)
+
+
+def _render_surface_text(spec, label):
+    if not isinstance(spec, dict):
+        return f"{label}: no tile specified"
+    tile_id = spec.get("tile")
+    tile = TILES.get(tile_id) if isinstance(tile_id, str) else None
+    if not tile:
+        return f"{label}: no tile specified"
+    pattern = next((p for p in CATALOG["patterns"] if p["id"] == spec.get("pattern")), None)
+    grout = next((g for g in CATALOG["grouts"] if g["id"] == spec.get("grout")), None)
+    size = " x ".join(str(v) for v in tile.get("size", []))
+    result = f"{label}: {tile['name']}, {size} cm, {tile.get('finish', 'matt')} finish"
+    if pattern:
+        result += f", {pattern['name']} layout"
+    if grout:
+        result += f", {grout['name']} grout"
+    return result
+
+
+def replicate_request(method, path, **kwargs):
+    response = requests.request(
+        method,
+        f"https://api.replicate.com/v1/{path.lstrip('/')}",
+        headers={"Authorization": f"Bearer {REPLICATE_TOKEN}"},
+        timeout=(8, 45),
+        **kwargs,
+    )
+    try:
+        data = response.json()
+    except ValueError:
+        data = {}
+    if not response.ok:
+        detail = data.get("detail") or data.get("error") or "Replicate request failed"
+        raise RuntimeError(f"Replicate {response.status_code}: {str(detail)[:300]}")
+    return data
+
+
+@app.post("/api/renders")
+def api_create_renders():
+    if not REPLICATE_TOKEN:
+        return err("Bildgenerierung ist noch nicht eingerichtet. Trage REPLICATE_API_TOKEN in .env ein.", 503, "no_replicate")
+    if rate_limited(12, 300):
+        return err("Zu viele Bildgenerierungen. Bitte warte einige Minuten.", 429, "rate_limit")
+    body = request.get_json(silent=True) or {}
+    try:
+        media, b64 = parse_data_url(body.get("reference", ""))
+    except ValueError as exc:
+        return err(str(exc), 400, "image")
+    if len(b64) > 1_300_000:
+        return err("Die Szenenreferenz ist zu groß. Bitte versuche es erneut.", 413, "image_too_large")
+    if not re.fullmatch(r"[\w.-]+/[\w.-]+", REPLICATE_MODEL):
+        return err("REPLICATE_MODEL muss im Format anbieter/modell angegeben sein.", 500, "replicate_config")
+
+    design = body.get("design")
+    if not isinstance(design, dict):
+        design = {}
+    surfaces = [_render_surface_text(design.get("floor"), "Boden")]
+    walls = design.get("walls") if isinstance(design.get("walls"), list) else []
+    surfaces.extend(_render_surface_text(wall, f"Wand {index + 1}") for index, wall in enumerate(walls[:8]))
+    finish_brief = "; ".join(surfaces)
+    reference = f"data:{media};base64,{b64}"
+    renders = []
+    try:
+        for label, view in RENDER_VIEWS:
+            prompt = (
+                "Create a photorealistic, finished bathroom interior photograph based on the supplied 3D room-plan reference. "
+                "Preserve its room proportions, openings, fixture positions, tile colors, tile sizes and tile layout; "
+                "do not redesign the room or add fixtures. Convert the open dollhouse cutaway into a complete real interior "
+                "with a ceiling, physically plausible materials, soft natural architectural lighting, and realistic camera optics. "
+                f"Material schedule: {finish_brief}. Camera: {view}. "
+                "No people, no text, no labels, no collage, no UI."
+            )
+            prediction = replicate_request(
+                "POST",
+                f"models/{REPLICATE_MODEL}/predictions",
+                json={"input": {
+                    "prompt": prompt,
+                    "image_input": [reference],
+                    "aspect_ratio": "4:3",
+                    "output_format": "jpg",
+                }},
+            )
+            renders.append({"id": prediction["id"], "view": label, "status": prediction.get("status", "starting")})
+    except requests.Timeout:
+        app.logger.warning("Replicate prediction creation timed out")
+        if not renders:
+            return err("Replicate antwortet gerade nicht. Bitte versuche es erneut.", 504, "replicate_timeout")
+    except requests.RequestException as exc:
+        app.logger.warning("Replicate request failed: %s", type(exc).__name__)
+        if not renders:
+            return err("Replicate ist gerade nicht erreichbar.", 502, "replicate_network")
+    except (RuntimeError, KeyError) as exc:
+        app.logger.warning("Replicate rejected a render request: %s", str(exc)[:300])
+        if not renders:
+            return err("Replicate konnte die Bildgenerierung nicht starten. Prüfe Token, Modell und Abrechnung.", 502, "replicate_request")
+    return jsonify({"renders": renders})
+
+
+@app.get("/api/renders/<prediction_id>")
+def api_get_render(prediction_id):
+    if not REPLICATE_TOKEN:
+        return err("Bildgenerierung ist noch nicht eingerichtet.", 503, "no_replicate")
+    if not re.fullmatch(r"[a-zA-Z0-9_-]{8,64}", prediction_id):
+        return err("Ungültige Bildgenerierungs-ID.", 400, "render_id")
+    try:
+        prediction = replicate_request("GET", f"predictions/{prediction_id}")
+    except requests.Timeout:
+        return err("Die Statusabfrage bei Replicate hat zu lange gedauert.", 504, "replicate_timeout")
+    except requests.RequestException as exc:
+        app.logger.warning("Replicate status request failed: %s", type(exc).__name__)
+        return err("Der Status kann gerade nicht abgerufen werden.", 502, "replicate_network")
+    except RuntimeError as exc:
+        app.logger.warning("Replicate status failed: %s", str(exc)[:300])
+        return err("Der Bildstatus konnte nicht abgerufen werden.", 502, "replicate_request")
+
+    output = prediction.get("output")
+    if isinstance(output, str):
+        output = [output]
+    images = []
+    for item in output or []:
+        url = item.get("url") if isinstance(item, dict) else item
+        if isinstance(url, str) and url.startswith("https://"):
+            images.append(url)
+    return jsonify({
+        "id": prediction_id,
+        "status": prediction.get("status", "processing"),
+        "images": images,
+        "error": str(prediction.get("error") or "")[:300],
+    })
+
+
+# ======================================================================================
 # Statische Seiten & Status
 # ======================================================================================
 @app.get("/api/status")
@@ -792,6 +939,8 @@ def api_status():
             "sdk": HAVE_SDK,
             "keySet": bool(API_KEY),
             "model": MODEL if LLM_READY else None,
+            "replicate": bool(REPLICATE_TOKEN),
+            "replicateModel": REPLICATE_MODEL if REPLICATE_TOKEN else None,
         }
     )
 

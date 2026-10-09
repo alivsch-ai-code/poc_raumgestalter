@@ -213,8 +213,17 @@ export function initCapture(root, { onLoaded }) {
   const kindSeg = h('div', { class: 'seg', role: 'group', 'aria-label': 'Art des Bildes' },
     h('button', { type: 'button', dataset: { k: 'plan' }, onclick: () => setKind('plan') }, 'Plan / Skizze'),
     h('button', { type: 'button', dataset: { k: 'foto' }, onclick: () => setKind('foto') }, 'Foto vom Raum'));
-  const kindRow = h('div', { class: 'kind' }, h('span', { class: 'lbl' }, 'Das Bild zeigt:'), kindSeg);
-  function setKind(k) { st.kind = k; [...kindSeg.children].forEach((b) => b.classList.toggle('on', b.dataset.k === k)); }
+  const camBtn = h('button', { class: 'btn small', type: 'button', hidden: true, onclick: () => camInput.click() }, icon('camera'), 'Foto aufnehmen');
+  const kindHint = h('p', { class: 'help kind-hint' });
+  const kindRow = h('div', { class: 'kind' }, h('span', { class: 'lbl' }, 'Das Bild zeigt:'), kindSeg, camBtn);
+  function setKind(k) {
+    st.kind = k;
+    [...kindSeg.children].forEach((b) => b.classList.toggle('on', b.dataset.k === k));
+    camBtn.hidden = k !== 'foto';
+    kindHint.textContent = k === 'foto'
+      ? 'Die KI rekonstruiert aus einem Raumfoto eine ungefähre Draufsicht. Maße und verdeckte Bereiche prüfst du danach im 2D-Editor.'
+      : 'Lade einen Grundriss oder eine Skizze hoch. Die erkannten Wände und Maße kannst du danach prüfen.';
+  }
   const sketchHost = h('div', null, pad.el);
   function setTab(t) {
     st.tab = t;
@@ -257,7 +266,7 @@ export function initCapture(root, { onLoaded }) {
         h('h2', { id: 'h-cap' }, 'Dein Raum'),
         h('p', { class: 'sub' }, 'Zeig mir den Raum und gib die Maße an, damit alles stimmt.'),
         h('div', { class: 'tabs', role: 'tablist' }, tabBtns.upload, tabBtns.sketch),
-        dropHost, sketchHost, camInput, kindRow,
+        dropHost, sketchHost, camInput, kindRow, kindHint,
         h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '20px', gap: '8px' } },
           h('span', { class: 'lbl', style: { fontSize: '15px', fontFamily: 'var(--f-head)' } }, 'Maße'), unitSeg),
         dimsBox,
@@ -274,7 +283,7 @@ export function initCapture(root, { onLoaded }) {
     h('div', { class: 'trust' },
       h('div', null, h('h3', null, 'Die KI erkennt, der Code rechnet'), h('p', null, 'Claude liest Wände, Türen und Fenster aus deinem Bild. Alle Maße, Fliesenschnitte und Mengen berechnet das Programm exakt.')),
       h('div', null, h('h3', null, 'Fliesen in echter Größe'), h('p', null, 'Format, Fuge und Verlegemuster sind maßstäblich. Du siehst Randstücke und Verschnitt, bevor du kaufst.')),
-      h('div', null, h('h3', null, 'Alles bleibt bei dir'), h('p', null, 'Dein Projekt wird nur in deinem Browser gespeichert. Bilder gehen nur zur Erkennung an die KI.')))));
+      h('div', null, h('h3', null, 'Du entscheidest über die Bildfreigabe'), h('p', null, 'Dein Projekt bleibt im Browser. Raumfotos gehen zur Erkennung an Claude; deine 3D-Planung geht nur nach Klick zur Bildgenerierung an Replicate.')))));
 
   setUnit('m'); setKind('plan'); renderDrop(); setTab('upload'); renderStatus(); updateCta();
   on('status', () => { renderStatus(); updateCta(); });

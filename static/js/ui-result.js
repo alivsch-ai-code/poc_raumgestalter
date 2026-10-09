@@ -5,9 +5,11 @@ import { S, on, exportProject } from './state.js';
 import { buildBom, patternOf, tileOf, groutOf, paintOf, trimOf } from './design.js';
 import { polyArea } from './room.js';
 import { renderSwatch } from './tilegen.js';
+import * as api from './api.js';
 
 export function initResult(root, { scene }) {
   const holder = h('div');
+  const renderState = { busy: false, items: [] };
   root.append(holder);
 
   function swatch(tile, px = 38) {
@@ -70,6 +72,10 @@ export function initResult(root, { scene }) {
     holder.append(h('div', { class: 'sec' }, h('div', { class: 'sec-h' }, h('h3', null, 'Zubehör')),
       h('table', { class: 'bom' }, h('tbody', null, ...acc.map(([a, b, c]) => h('tr', null, h('td', null, a), h('td', { class: 'r' }, b), h('td', { class: 'r', style: { color: 'var(--muted)' } }, c)))))));
 
+    const renderPanel = h('div', { class: 'sec' });
+    renderAiPanel(renderPanel);
+    holder.append(renderPanel);
+
     // Export
     holder.append(h('div', { class: 'sec no-print' }, h('div', { class: 'sec-h' }, h('h3', null, 'Mitnehmen')),
       h('div', { class: 'exports' },
@@ -78,6 +84,88 @@ export function initResult(root, { scene }) {
         h('button', { class: 'btn', type: 'button', onclick: () => { window.print(); } }, icon('print'), 'Drucken / PDF'),
         h('button', { class: 'btn', type: 'button', onclick: () => { download('raumgestalter-projekt.json', new Blob([exportProject()], { type: 'application/json' })); toast('Projekt gespeichert. Mit „Projekt öffnen“ lädst du es wieder.', 'ok'); } }, icon('save'), 'Projekt sichern')),
       h('p', { class: 'disclaimer' }, 'Hinweis: Menge = Fläche netto + Verschnitt je Muster, aufgerundet auf ganze Pakete. Fugen- und Klebermengen sind Richtwerte nach Herstellerformeln. Vor dem Kauf vom Fachbetrieb prüfen lassen. Preise und Fliesen im Katalog sind Beispieldaten.')));
+  }
+
+  function renderAiPanel(host) {
+    clear(host);
+    const action = h('button', { class: 'btn primary', type: 'button', disabled: renderState.busy, onclick: startRenders },
+      icon('wand'), renderState.busy ? 'Ansichten werden erstellt …' : '3 realistische Ansichten erstellen');
+    host.append(h('div', { class: 'sec-h' }, h('h3', null, 'Realistische Raumansichten')),
+      h('p', { class: 'help' }, S.status.replicate
+        ? 'Erstellt aus deiner aktuellen 3D-Planung. KI-Bilder sind eine Visualisierung, keine maßstabsgetreue Ausführungsplanung.'
+        : 'Für diese optionale Funktion REPLICATE_API_TOKEN in .env eintragen. Die Generierung verursacht Modellkosten.'),
+      h('div', { class: 'ai-gallery' }, ...renderState.items.map((item) => {
+        const content = item.image
+          ? h('img', { src: item.image, alt: `KI-generierte Raumansicht: ${item.view}`, loading: 'lazy' })
+          : h('div', { class: `ai-placeholder${item.status === 'failed' ? ' failed' : ''}` }, item.status === 'failed' ? 'Erstellung fehlgeschlagen' : 'Bild wird erstellt …');
+        return h('article', { class: 'ai-image' }, content,
+          h('div', { class: 'ai-image-foot' }, h('b', null, item.view), item.image
+            ? h('a', { class: 'btn small', href: item.image, target: '_blank', rel: 'noopener', download: `raumgestalter-${item.view.toLowerCase()}.jpg` }, icon('download'), 'Bild öffnen')
+            : h('small', null, item.status === 'failed' ? item.error || 'Bitte erneut versuchen.' : 'Wird gerendert')));
+      })), action);
+  }
+
+  async function startRenders() {
+    if (renderState.busy) return;
+    renderState.busy = true;
+    renderState.items = [];
+    render();
+    try {
+      const reference = await makeReference();
+      const result = await api.createRenders({
+        reference,
+        design: { floor: S.design.floor, walls: S.design.walls },
+      });
+      renderState.items = result.renders.map((item) => ({ ...item, status: item.status || 'starting' }));
+      render();
+      await Promise.all(renderState.items.map(pollRender));
+    } catch (e) {
+      toast(e.message || 'Die Ansichten konnten nicht gestartet werden.', 'error', 6000);
+    } finally {
+      renderState.busy = false;
+      render();
+    }
+  }
+
+  async function makeReference() {
+    const source = await new Promise((resolve, reject) => {
+      const image = new Image();
+      image.onload = () => resolve(image);
+      image.onerror = reject;
+      image.src = scene.capture(1200);
+    });
+    const scale = Math.min(1, 960 / Math.max(source.width, source.height));
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.round(source.width * scale);
+    canvas.height = Math.round(source.height * scale);
+    canvas.getContext('2d').drawImage(source, 0, 0, canvas.width, canvas.height);
+    return canvas.toDataURL('image/jpeg', 0.78);
+  }
+
+  async function pollRender(item) {
+    for (let attempt = 0; attempt < 90; attempt++) {
+      if (['succeeded', 'successful', 'failed', 'canceled'].includes(item.status)) break;
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      try {
+        const result = await api.getRender(item.id);
+        item.status = result.status;
+        item.image = result.images?.[0] || null;
+        item.error = result.error;
+        if (item.status === 'succeeded' || item.status === 'successful') item.status = item.image ? 'succeeded' : 'failed';
+        if (['failed', 'canceled'].includes(item.status) && !item.error) item.error = 'Replicate hat kein Bild geliefert.';
+        render();
+      } catch (e) {
+        item.status = 'failed';
+        item.error = e.message || 'Status konnte nicht geladen werden.';
+        render();
+        break;
+      }
+    }
+    if (!['succeeded', 'successful', 'failed', 'canceled'].includes(item.status)) {
+      item.status = 'failed';
+      item.error = 'Zeitüberschreitung. Bitte prüfe den Modellstatus und starte neu.';
+      render();
+    }
   }
 
   async function exportPng(bom) {

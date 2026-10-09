@@ -24,4 +24,6 @@ const post = (url, body) => call(url, { method: 'POST', headers: { 'Content-Type
 export const getStatus = () => call('/api/status');
 export const getCatalog = () => call('/api/catalog');
 export const analyze = (payload) => post('/api/analyze', payload);
+export const createRenders = (payload) => post('/api/renders', payload);
+export const getRender = (id) => call(`/api/renders/${encodeURIComponent(id)}`);
 export const chat = (payload) => post('/api/chat', payload);

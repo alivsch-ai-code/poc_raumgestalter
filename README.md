@@ -22,7 +22,7 @@ freier Chat brauchen den Key.
 1. **Plan und Maße**: Bild hochladen, Skizze zeichnen oder Vorlage wählen. Länge/Breite angeben.
 2. **Raum prüfen**: Ecken ziehen, Zahlen antippen, Türen/Fenster/Möbel verschieben oder hinzufügen.
 3. **Fliesen wählen**: Fläche antippen, Fliese, Muster, Fuge, Höhe, Wandfarbe. Stil-Schnellstart und Assistent (Chat).
-4. **Ergebnis**: Mengen inkl. Verschnitt, Fugenmasse, Kleber, Leisten, Kosten (Beispielpreise). Export: PNG, CSV, PDF/Druck, Projekt (JSON).
+4. **Ergebnis**: Mengen inkl. Verschnitt, Fugenmasse, Kleber, Leisten und Kosten (Beispielpreise). Optional erzeugt Replicate drei realistische Ansichten der fertigen Gestaltung. Export: PNG, CSV, PDF/Druck, Projekt (JSON).
 
 Tasten: Strg+Z / Strg+Umschalt+Z, R (Möbel drehen), Entf, Pfeiltasten. Test-Link: `/?demo=bad-wanne&step=3&style=hotel`.
 
@@ -41,6 +41,12 @@ Tasten: Strg+Z / Strg+Umschalt+Z, R (Möbel drehen), Entf, Pfeiltasten. Test-Lin
 
 Einheit überall Zentimeter. Kein Build-Schritt, keine Cloud-Schriften oder CDNs.
 
+### Raumfoto und realistische Ansichten
+
+Im ersten Schritt kann statt eines Plans ein Raumfoto aufgenommen oder hochgeladen werden. Claude rekonstruiert daraus eine ungefähre Draufsicht mit Wänden, Öffnungen und Ausstattung. Im 2D-Prüfschritt müssen besonders Maße und verdeckte Bereiche kontrolliert werden; ein einzelnes Foto kann keine verlässliche maßstäbliche Geometrie liefern.
+
+Für optionale fotorealistische Entwurfsbilder `REPLICATE_API_TOKEN` in `.env` eintragen. Standardmodell ist `google/nano-banana`; `REPLICATE_MODEL` kann auf ein anderes kompatibles Replicate-Modell gesetzt werden. Im Ergebnis-Schritt startet eine ausdrückliche Aktion drei kostenpflichtige Bildgenerierungen. An Replicate wird dafür ein komprimierter Screenshot der 3D-Planung gesendet. Die erzeugten Bilder sind Visualisierungen und keine maßstabsgetreue Zusicherung.
+
 ## Eigene Fliesen einbinden
 
 `data/catalog.json` ersetzen. Pro Fliese: `id`, `name`, `series`, `look` (uni, marmor, travertin, beton, holz, schiefer, zellige, terrazzo),
@@ -50,7 +56,7 @@ Einheit überall Zentimeter. Kein Build-Schritt, keine Cloud-Schriften oder CDNs
 ## Grenzen des POC
 
 - Katalog und Preise sind Beispieldaten. Texturen sind prozedural, keine Herstellerfotos.
-- Erkennung hängt von der Planqualität ab; deshalb immer Schritt 2 (Prüfen) mit Warnungen.
+- Erkennung hängt von der Planqualität ab; Raumfotos sind besonders unsicher. Deshalb Schritt 2 immer prüfen.
 - Mengenformeln sind Richtwerte (Verschnitt je Muster, Fuge nach Herstellerformel).
 - Nur ein Raum, gerade Wände, Standard-Ausstattung.
 - Der Server hat ein einfaches Rate-Limit, aber keine Nutzerverwaltung. Nicht ungeschützt ins Internet stellen.
