@@ -3,6 +3,7 @@ import { h, s, $, clear, toast, parseNum, readFileAsDataURL, downscaleImage, fmt
 import { icon } from './icons.js';
 import { S, on, loadRoom, loadSaved, importProject } from './state.js';
 import { makeTemplates, makeRect, wallInfo, polyBBox, DOOR_H } from './room.js';
+import { recentProjects, rememberProject, forgetProject } from './projects.js';
 import * as api from './api.js';
 
 const SCAN_MSGS = [
@@ -240,9 +241,38 @@ export function initCapture(root, { onLoaded }) {
   const resume = saved && h('div', { class: 'notice info', style: { marginBottom: '16px' } }, icon('home'),
     h('div', { style: { flex: 1 } }, h('b', null, 'Willkommen zurück. '), 'Dein letztes Projekt ist noch gespeichert.'),
     h('button', { class: 'btn small primary', type: 'button', onclick: () => {
-      loadRoom(saved.room, { design: saved.design, step: Math.max(2, saved.step || 2) });
+      loadRoom(saved.room, { design: saved.design, projectId: saved.projectId, projectName: saved.projectName, step: Math.max(2, saved.step || 2) });
       onLoaded?.();
     } }, 'Weitermachen'));
+
+  const recentHost = h('section', { class: 'recent-projects', hidden: true, 'aria-label': 'Zuletzt geöffnete Projekte' });
+  async function openRecentProject(project) {
+    try {
+      const savedProject = await api.getProject(project.id);
+      rememberProject(savedProject);
+      loadRoom(savedProject.room, { design: savedProject.design, projectId: savedProject.id, projectName: savedProject.name, step: 4 });
+      onLoaded?.();
+      toast('Projekt geöffnet.', 'ok');
+    } catch (e) {
+      if (e.code === 'project_not_found') { forgetProject(project.id); renderRecentProjects(); }
+      toast(e.message || 'Das Projekt konnte nicht geöffnet werden.', 'error');
+    }
+  }
+  function renderRecentProjects() {
+    clear(recentHost);
+    const projects = recentProjects();
+    recentHost.hidden = !projects.length;
+    if (!projects.length) return;
+    recentHost.append(h('h2', null, 'Zuletzt geöffnet'));
+    projects.forEach((project) => {
+      const updated = new Date(project.updatedAt);
+      const date = Number.isNaN(updated.getTime()) ? '' : updated.toLocaleDateString('de-DE');
+      recentHost.append(h('div', { class: 'recent-row' },
+        h('button', { class: 'recent-open', type: 'button', onclick: () => openRecentProject(project) },
+          h('b', null, project.name), h('small', null, date ? `Zuletzt geändert ${date}` : 'Gespeicherter Projektlink')),
+        h('button', { class: 'btn ghost icon', type: 'button', title: 'Aus dieser Liste entfernen', 'aria-label': `${project.name} aus der Liste entfernen`, onclick: () => { forgetProject(project.id); renderRecentProjects(); } }, icon('x'))));
+    });
+  }
 
   const fileOpen = h('input', { type: 'file', accept: '.json,application/json', hidden: true, onchange: async () => {
     const f = fileOpen.files[0];
@@ -260,7 +290,7 @@ export function initCapture(root, { onLoaded }) {
           h('span', null, h('i', null, '1'), 'Plan + Maße'), h('span', null, h('i', null, '2'), 'Raum prüfen'),
           h('span', null, h('i', null, '3'), 'Fliesen wählen'), h('span', null, h('i', null, '4'), 'Einkaufsliste'))),
       h('div', { class: 'hero-art' }, h('img', { src: '/static/samples/hero.jpg', alt: 'Beispiel: ein Bad mit Marmorfliesen im Raumgestalter', onerror: (e) => e.target.closest('.hero-art').remove() }))),
-    resume,
+    resume, recentHost,
     h('div', { class: 'cap' },
       h('section', { class: 'card cap-main', 'aria-labelledby': 'h-cap' },
         h('h2', { id: 'h-cap' }, 'Dein Raum'),
@@ -285,7 +315,7 @@ export function initCapture(root, { onLoaded }) {
       h('div', null, h('h3', null, 'Fliesen in echter Größe'), h('p', null, 'Format, Fuge und Verlegemuster sind maßstäblich. Du siehst Randstücke und Verschnitt, bevor du kaufst.')),
       h('div', null, h('h3', null, 'Du entscheidest über die Bildfreigabe'), h('p', null, 'Dein Projekt bleibt im Browser. Raumfotos gehen zur Erkennung an Claude; deine 3D-Planung geht nur nach Klick zur Bildgenerierung an Replicate.')))));
 
-  setUnit('m'); setKind('plan'); renderDrop(); setTab('upload'); renderStatus(); updateCta();
+  setUnit('m'); setKind('plan'); renderDrop(); setTab('upload'); renderStatus(); updateCta(); renderRecentProjects();
   on('status', () => { renderStatus(); updateCta(); });
   return { reset() { st.image = null; renderDrop(); updateCta(); } };
 }

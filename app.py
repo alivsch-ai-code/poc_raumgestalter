@@ -14,13 +14,16 @@ import json
 import math
 import os
 import re
+import secrets
 import statistics
 import time
 from collections import defaultdict, deque
+from datetime import datetime, timezone
 from pathlib import Path
 
 from flask import Flask, jsonify, request, send_from_directory
 import requests
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 BASE = Path(__file__).parent
 
@@ -42,6 +45,7 @@ MODEL = os.getenv("CLAUDE_MODEL", "claude-sonnet-5-5").strip()
 CHAT_MODEL = os.getenv("CLAUDE_MODEL_CHAT", MODEL).strip()
 REPLICATE_TOKEN = os.getenv("REPLICATE_API_TOKEN", "").strip()
 REPLICATE_MODEL = os.getenv("REPLICATE_MODEL", "google/nano-banana").strip()
+PROJECTS_DIR = Path(os.getenv("PROJECTS_DIR", BASE / "data" / "projects")).expanduser()
 HOST = os.getenv("HOST", "127.0.0.1")
 PORT = int(os.getenv("PORT", "5057"))
 
@@ -57,6 +61,7 @@ KEY_LOOKS_VALID = bool(API_KEY) and not API_KEY.lower().startswith(("sk-ant-xxx"
 LLM_READY = HAVE_SDK and KEY_LOOKS_VALID
 
 app = Flask(__name__, static_folder=str(BASE / "static"), static_url_path="/static")
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
 app.config["MAX_CONTENT_LENGTH"] = 14 * 1024 * 1024
 app.config["JSON_AS_ASCII"] = False
 
@@ -78,7 +83,7 @@ _hits: dict[str, deque] = defaultdict(deque)
 
 def rate_limited(limit: int = 30, window: int = 60) -> bool:
     """Sehr einfacher Schutz vor versehentlich hohen API-Kosten."""
-    ip = request.headers.get("X-Forwarded-For", request.remote_addr or "?").split(",")[0].strip()
+    ip = request.remote_addr or "?"
     now = time.time()
     q = _hits[ip]
     while q and now - q[0] > window:
@@ -926,6 +931,123 @@ def api_get_render(prediction_id):
         "images": images,
         "error": str(prediction.get("error") or "")[:300],
     })
+
+
+def project_path(project_id):
+    if not isinstance(project_id, str) or not re.fullmatch(r"[A-Za-z0-9_-]{16,32}", project_id):
+        return None
+    return PROJECTS_DIR / f"{project_id}.json"
+
+
+def clean_project_payload(body):
+    project = body.get("project")
+    if not isinstance(project, dict):
+        return None
+    room = project.get("room")
+    design = project.get("design")
+    if not isinstance(design, dict):
+        return None
+    polygon = room.get("polygon") if isinstance(room, dict) else None
+    walls = design.get("walls")
+    if not isinstance(polygon, list) or not 3 <= len(polygon) <= 16:
+        return None
+    if not isinstance(design.get("floor"), dict) or not isinstance(walls, list) or len(walls) != len(polygon):
+        return None
+    for point in polygon:
+        if not isinstance(point, dict):
+            return None
+        for axis in ("x", "y"):
+            value = point.get(axis)
+            if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value) or abs(value) > 5000:
+                return None
+    surfaces = [design["floor"], *walls]
+    for surface in surfaces:
+        if not isinstance(surface, dict):
+            return None
+        tile_id = surface.get("tile")
+        if tile_id is not None and (not isinstance(tile_id, str) or tile_id not in TILE_IDS):
+            return None
+        pattern_id, grout_id = surface.get("pattern"), surface.get("grout")
+        if not isinstance(pattern_id, str) or pattern_id not in PATTERN_IDS or not isinstance(grout_id, str) or grout_id not in GROUT_IDS:
+            return None
+    paint_id, trim_id = design.get("paint"), design.get("trim")
+    if not isinstance(paint_id, str) or paint_id not in PAINT_IDS or not isinstance(trim_id, str) or trim_id not in TRIM_IDS:
+        return None
+    try:
+        encoded = json.dumps({"room": room, "design": design}, ensure_ascii=False, allow_nan=False)
+    except (TypeError, ValueError):
+        return None
+    if len(encoded.encode("utf-8")) > 1_000_000:
+        return None
+    return {"room": room, "design": design}
+
+
+@app.post("/api/projects")
+def api_save_project():
+    if rate_limited(20, 60):
+        return err("Zu viele Projekt-Speicherungen. Bitte warte kurz.", 429, "rate_limit")
+    body = request.get_json(silent=True)
+    if not isinstance(body, dict):
+        return err("Die Projektdaten konnten nicht gelesen werden.", 400, "project")
+    clean = clean_project_payload(body)
+    if not clean:
+        return err("Der Raum oder die Gestaltung ist unvollständig oder ungültig.", 400, "project")
+
+    project_id = body.get("id")
+    if project_id:
+        path = project_path(project_id)
+        if not path or not path.is_file():
+            return err("Dieses Projekt wurde nicht gefunden.", 404, "project_not_found")
+        try:
+            previous = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            return err("Das gespeicherte Projekt kann nicht gelesen werden.", 500, "project_storage")
+        created_at = previous.get("createdAt")
+    else:
+        project_id = secrets.token_urlsafe(15)
+        path = project_path(project_id)
+        created_at = datetime.now(timezone.utc).isoformat()
+
+    name = body.get("name") if isinstance(body.get("name"), str) else ""
+    name = re.sub(r"[\x00-\x1f\x7f]", "", name).strip()[:80] or "Mein Raum"
+    updated_at = datetime.now(timezone.utc).isoformat()
+    record = {
+        "id": project_id,
+        "name": name,
+        "createdAt": created_at,
+        "updatedAt": updated_at,
+        **clean,
+    }
+    try:
+        PROJECTS_DIR.mkdir(parents=True, exist_ok=True)
+        temp_path = path.with_suffix(".tmp")
+        temp_path.write_text(json.dumps(record, ensure_ascii=False, allow_nan=False), encoding="utf-8")
+        temp_path.replace(path)
+    except OSError:
+        app.logger.exception("Project could not be persisted")
+        return err("Das Projekt konnte auf dem Server nicht gespeichert werden.", 500, "project_storage")
+    return jsonify({"id": project_id, "name": name, "createdAt": created_at, "updatedAt": updated_at})
+
+
+@app.get("/api/projects/<project_id>")
+def api_get_project(project_id):
+    path = project_path(project_id)
+    if not path or not path.is_file():
+        return err("Dieses Projekt wurde nicht gefunden.", 404, "project_not_found")
+    try:
+        return jsonify(json.loads(path.read_text(encoding="utf-8")))
+    except (OSError, ValueError):
+        return err("Das gespeicherte Projekt kann nicht gelesen werden.", 500, "project_storage")
+
+
+@app.get("/p/<project_id>")
+def shared_project_page(project_id):
+    path = project_path(project_id)
+    if not path or not path.is_file():
+        return err("Dieses Projekt wurde nicht gefunden.", 404, "project_not_found")
+    response = send_from_directory(app.static_folder, "index.html")
+    response.headers["Cache-Control"] = "no-cache"
+    return response
 
 
 # ======================================================================================

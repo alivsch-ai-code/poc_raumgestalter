@@ -14,6 +14,7 @@ import { initEdit } from './ui-edit.js';
 import { initDesign } from './ui-design.js';
 import { initResult } from './ui-result.js';
 import { initChat } from './chat.js';
+import { rememberProject } from './projects.js';
 
 const STEPS = [
   { n: 1, t: 'Plan und Maße' },
@@ -234,6 +235,23 @@ async function boot() {
   });
 
   layout();
+
+  const sharedProject = location.pathname.match(/^\/p\/([A-Za-z0-9_-]{16,32})$/);
+  if (sharedProject) {
+    try {
+      const project = await api.getProject(sharedProject[1]);
+      rememberProject(project);
+      loadRoom(project.room, {
+        design: project.design,
+        projectId: project.id,
+        projectName: project.name,
+        step: 4,
+      });
+    } catch (e) {
+      toast(e.message || 'Der Projektlink ist ungültig oder abgelaufen.', 'error', 6000);
+    }
+    return;
+  }
 
   // Zum schnellen Ausprobieren und für Tests: ?demo=bad-wanne&step=3&style=hotel
   const q = new URLSearchParams(location.search);

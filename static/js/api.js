@@ -26,4 +26,6 @@ export const getCatalog = () => call('/api/catalog');
 export const analyze = (payload) => post('/api/analyze', payload);
 export const createRenders = (payload) => post('/api/renders', payload);
 export const getRender = (id) => call(`/api/renders/${encodeURIComponent(id)}`);
+export const saveProject = (payload) => post('/api/projects', payload);
+export const getProject = (id) => call(`/api/projects/${encodeURIComponent(id)}`);
 export const chat = (payload) => post('/api/chat', payload);

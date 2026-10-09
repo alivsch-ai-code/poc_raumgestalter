@@ -19,6 +19,8 @@ export const S = {
   surface: 'floor', // gewählte Fläche
   item: null, // { type: 'opening'|'fixture', id }
   fileName: null,
+  projectId: null,
+  projectName: null,
 };
 
 const STORAGE = 'raumgestalter.poc.v1';
@@ -71,7 +73,7 @@ let persistTimer;
 function persist() {
   clearTimeout(persistTimer);
   persistTimer = setTimeout(() => {
-    try { localStorage.setItem(STORAGE, JSON.stringify({ room: S.room, design: S.design, step: S.step })); } catch { /* voll oder gesperrt */ }
+    try { localStorage.setItem(STORAGE, JSON.stringify({ room: S.room, design: S.design, step: S.step, projectId: S.projectId, projectName: S.projectName })); } catch { /* voll oder gesperrt */ }
   }, 300);
 }
 
@@ -89,6 +91,11 @@ export function clearSaved() { try { localStorage.removeItem(STORAGE); } catch {
 // ----------------------------------------------------------------- Setzen
 export function setStatus(st) { S.status = st; emit('status', st); }
 export function setCatalog(cat) { S.catalog = cat; emit('catalog', cat); }
+export function setProjectIdentity(id, name) {
+  S.projectId = id;
+  S.projectName = name;
+  persist();
+}
 
 export function setStep(step) {
   if (step === S.step) return;
@@ -104,12 +111,14 @@ export function selectSurface(id) { S.surface = id; emit('surface', id); }
 export function selectItem(it) { S.item = it; emit('item', it); }
 
 /** Neuen Raum laden (Vorlage, KI-Ergebnis, gespeichertes Projekt). */
-export function loadRoom(room, { underlay = null, meta = null, design = null, step = 2 } = {}) {
+export function loadRoom(room, { underlay = null, meta = null, design = null, projectId = null, projectName = null, step = 2 } = {}) {
   const { room: r, shift } = normalizeRoom(room);
   S.room = r;
   S.underlay = underlay ? { ...underlay, x: underlay.x + shift.dx, y: underlay.y + shift.dy } : null;
   S.meta = meta;
   S.design = design ? reconcileDesign(deepClone(design), r) : defaultDesign(r, S.catalog);
+  S.projectId = projectId;
+  S.projectName = projectName;
   S.surface = 'floor';
   S.item = null;
   history = []; hIdx = -1;

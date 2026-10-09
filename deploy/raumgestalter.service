@@ -1,0 +1,26 @@
+[Unit]
+Description=Raumgestalter Flask application
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=raumgestalter
+Group=raumgestalter
+WorkingDirectory=/opt/raumgestalter
+EnvironmentFile=/etc/raumgestalter.env
+Environment=HOST=127.0.0.1
+Environment=PORT=5057
+Environment=PROJECTS_DIR=/var/lib/raumgestalter/projects
+ExecStart=/opt/raumgestalter/.venv/bin/gunicorn --workers 2 --bind 127.0.0.1:5057 --timeout 180 app:app
+Restart=on-failure
+RestartSec=5
+UMask=0027
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/raumgestalter
+
+[Install]
+WantedBy=multi-user.target

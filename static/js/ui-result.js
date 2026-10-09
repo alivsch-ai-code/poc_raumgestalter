@@ -1,15 +1,17 @@
 // Schritt 4: Mengen, Kosten und Export.
 import { h, clear, toast, download, fmt0, fmt1, fmt2, fmtEur, fmtM2 } from './dom.js';
 import { icon } from './icons.js';
-import { S, on, exportProject } from './state.js';
+import { S, on, exportProject, setProjectIdentity } from './state.js';
 import { buildBom, patternOf, tileOf, groutOf, paintOf, trimOf } from './design.js';
-import { polyArea } from './room.js';
+import { polyArea, polyBBox } from './room.js';
 import { renderSwatch } from './tilegen.js';
 import * as api from './api.js';
+import { rememberProject } from './projects.js';
 
 export function initResult(root, { scene }) {
   const holder = h('div');
   const renderState = { busy: false, items: [] };
+  let projectNameDraft = '';
   root.append(holder);
 
   function swatch(tile, px = 38) {
@@ -76,6 +78,10 @@ export function initResult(root, { scene }) {
     renderAiPanel(renderPanel);
     holder.append(renderPanel);
 
+    const projectPanel = h('div', { class: 'sec' });
+    renderProjectPanel(projectPanel);
+    holder.append(projectPanel);
+
     // Export
     holder.append(h('div', { class: 'sec no-print' }, h('div', { class: 'sec-h' }, h('h3', null, 'Mitnehmen')),
       h('div', { class: 'exports' },
@@ -84,6 +90,63 @@ export function initResult(root, { scene }) {
         h('button', { class: 'btn', type: 'button', onclick: () => { window.print(); } }, icon('print'), 'Drucken / PDF'),
         h('button', { class: 'btn', type: 'button', onclick: () => { download('raumgestalter-projekt.json', new Blob([exportProject()], { type: 'application/json' })); toast('Projekt gespeichert. Mit „Projekt öffnen“ lädst du es wieder.', 'ok'); } }, icon('save'), 'Projekt sichern')),
       h('p', { class: 'disclaimer' }, 'Hinweis: Menge = Fläche netto + Verschnitt je Muster, aufgerundet auf ganze Pakete. Fugen- und Klebermengen sind Richtwerte nach Herstellerformeln. Vor dem Kauf vom Fachbetrieb prüfen lassen. Preise und Fliesen im Katalog sind Beispieldaten.')));
+  }
+
+  function renderProjectPanel(host) {
+    clear(host);
+    const bounds = polyBBox(S.room.polygon);
+    const nameInput = h('input', {
+      class: 'project-name', type: 'text', maxlength: 80,
+      value: projectNameDraft || S.projectName || `Raum ${fmt0(bounds.w)} × ${fmt0(bounds.h)} cm`,
+      oninput: (event) => { projectNameDraft = event.target.value; },
+    });
+    const saveButton = h('button', { class: 'btn primary', type: 'button', onclick: () => saveProjectLink(nameInput, saveButton) },
+      icon('save'), S.projectId ? 'Änderungen über Link speichern' : 'Link erstellen und kopieren');
+    host.append(h('div', { class: 'sec-h' }, h('h3', null, 'Projekt wiederverwenden')),
+      h('p', { class: 'help' }, 'Der Link öffnet diesen Entwurf auf anderen Geräten. Jeder mit dem Link kann ihn ansehen und Änderungen speichern.'),
+      h('label', { class: 'project-label' }, 'Projektname', nameInput),
+      saveButton);
+    if (S.projectId) {
+      const url = new URL(`/p/${S.projectId}`, location.origin).href;
+      host.append(h('div', { class: 'project-share' },
+        h('a', { href: url, target: '_blank', rel: 'noopener' }, url),
+        h('button', { class: 'btn small', type: 'button', onclick: () => copyProjectLink(url) }, icon('save'), 'Link kopieren')));
+    }
+  }
+
+  async function saveProjectLink(nameInput, button) {
+    if (button.disabled) return;
+    button.disabled = true;
+    button.textContent = 'Projekt wird gespeichert …';
+    try {
+      const saved = await api.saveProject({
+        id: S.projectId,
+        name: nameInput.value.trim(),
+        project: { room: S.room, design: S.design },
+      });
+      setProjectIdentity(saved.id, saved.name);
+      projectNameDraft = saved.name;
+      rememberProject(saved);
+      const url = new URL(`/p/${saved.id}`, location.origin).href;
+      const copied = await copyProjectLink(url);
+      toast(copied ? 'Projekt gespeichert. Der Link ist kopiert.' : 'Projekt gespeichert. Der Link steht im Ergebnisbereich.', copied ? 'ok' : 'info');
+      render();
+    } catch (e) {
+      toast(e.message || 'Das Projekt konnte nicht gespeichert werden.', 'error', 6000);
+    } finally {
+      button.disabled = false;
+      if (button.isConnected) button.textContent = S.projectId ? 'Änderungen über Link speichern' : 'Link erstellen und kopieren';
+    }
+  }
+
+  async function copyProjectLink(url) {
+    try {
+      await navigator.clipboard.writeText(url);
+      return true;
+    } catch {
+      toast(`Projektlink: ${url}`, 'info', 10000);
+      return false;
+    }
   }
 
   function renderAiPanel(host) {
@@ -205,7 +268,10 @@ export function initResult(root, { scene }) {
   }
 
   on('design', () => { if (S.step === 4) render(); });
-  on('room', (e) => { if (S.step === 4 && !e?.live) render(); });
+  on('room', (e) => {
+    if (e?.fresh) projectNameDraft = '';
+    if (S.step === 4 && !e?.live) render();
+  });
   on('step', (st) => { if (st === 4) render(); });
   return { render };
 }

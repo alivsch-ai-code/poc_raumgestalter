@@ -1,0 +1,5 @@
+# Replace with the public domain pointed at the IONOS VPS.
+raumgestalter.example.de {
+    encode zstd gzip
+    reverse_proxy 127.0.0.1:5057
+}
